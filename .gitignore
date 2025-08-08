@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+
+# Local env & secrets
+.env
+.env.*
+
+# Logs & artifacts
+logs/
+run.log
+
+# Editors/OS junk
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

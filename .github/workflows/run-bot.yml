@@ -1,0 +1,113 @@
+name: Run Options Bot
+
+on:
+  # Market OPEN windows in UTC. Includes both DST and Standard Time.
+  schedule:
+    # Daylight Saving Time (Mar–Nov): 13:30–20:00 UTC
+    - cron: "30 13 * * 1-5"        # 13:30
+    - cron: "0,30 14-19 * * 1-5"   # 14:00–19:30
+    # Standard Time (Nov–Mar): 14:30–21:00 UTC
+    - cron: "30 14 * * 1-5"        # 14:30
+    - cron: "0,30 15-20 * * 1-5"   # 15:00–20:30
+  workflow_dispatch:
+    inputs:
+      tickers:
+        description: "Comma-separated symbols (optional)"
+        required: false
+      watchlist:
+        description: "Tradier Watchlist name (optional)"
+        required: false
+      risk:
+        description: "Risk profile"
+        required: true
+        default: "conservative"
+        type: choice
+        options: [extreme, high, moderate, low, conservative]
+      sandbox:
+        description: "Use sandbox?"
+        required: true
+        default: "false"
+        type: choice
+        options: ["true","false"]
+      live:
+        description: "Place orders?"
+        required: true
+        default: "false"
+        type: choice
+        options: ["true","false"]
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: options-bot
+      cancel-in-progress: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pandas_market_calendars pytz
+
+      - name: Skip if market closed (saves minutes)
+        id: market_open
+        run: |
+          python - <<'PY'
+          import os, datetime as dt, pytz
+          import pandas_market_calendars as mcal
+          now_utc = dt.datetime.utcnow().replace(tzinfo=pytz.UTC)
+          ny = pytz.timezone('America/New_York')
+          now_ny = now_utc.astimezone(ny)
+          cal = mcal.get_calendar('XNYS')
+          schedule = cal.schedule(start_date=now_ny.date(), end_date=now_ny.date())
+          is_open = False
+          if not schedule.empty:
+            open_dt = schedule.iloc[0]['market_open'].tz_convert(ny)
+            close_dt = schedule.iloc[0]['market_close'].tz_convert(ny)
+            is_open = open_dt <= now_ny <= close_dt
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+            fh.write(f"open={'true' if is_open else 'false'}\n")
+          print("Market open:", is_open, "NY time:", now_ny)
+          PY
+
+      - name: Inject env
+        if: steps.market_open.outputs.open == 'true' || github.event_name == 'workflow_dispatch'
+        run: |
+          echo "TRADIER_ACCESS_TOKEN=${{ secrets.TRADIER_ACCESS_TOKEN }}" >> $GITHUB_ENV
+          echo "TRADIER_ACCOUNT_ID=${{ secrets.TRADIER_ACCOUNT_ID }}" >> $GITHUB_ENV
+          echo "TRADIER_ENV=live" >> $GITHUB_ENV
+
+      - name: Run bot
+        if: steps.market_open.outputs.open == 'true' || github.event_name == 'workflow_dispatch'
+        env:
+          TICKERS: ${{ github.event.inputs.tickers }}
+          WATCHLIST: ${{ github.event.inputs.watchlist }}
+          RISK: ${{ github.event.inputs.risk || 'conservative' }}
+          SANDBOX: ${{ github.event.inputs.sandbox || 'false' }}
+          LIVE: ${{ github.event.inputs.live || 'false' }}
+        run: |
+          ARGS=""
+          if [ -n "$TICKERS" ]; then ARGS="$ARGS --tickers \"$TICKERS\""; fi
+          if [ -n "$WATCHLIST" ]; then ARGS="$ARGS --watchlist \"$WATCHLIST\""; fi
+          ARGS="$ARGS --risk $RISK"
+          if [ "$SANDBOX" = "true" ]; then ARGS="$ARGS --sandbox"; fi
+          if [ "$LIVE" = "true" ]; then ARGS="$ARGS --live"; fi
+          echo "Running: python options_bot.py $ARGS"
+          python options_bot.py $ARGS | tee run.log
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-logs-${{ github.run_id }}
+          path: run.log
+          retention-days: 7
