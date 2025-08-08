@@ -82,27 +82,41 @@ jobs:
       - name: Inject env
         if: steps.market_open.outputs.open == 'true' || github.event_name == 'workflow_dispatch'
         run: |
-          echo "TRADIER_ACCESS_TOKEN=${{ secrets.TRADIER_ACCESS_TOKEN }}" >> $GITHUB_ENV
-          echo "TRADIER_ACCOUNT_ID=${{ secrets.TRADIER_ACCOUNT_ID }}" >> $GITHUB_ENV
-          echo "TRADIER_ENV=live" >> $GITHUB_ENV
+            echo "TRADIER_ACCESS_TOKEN=${{ secrets.TRADIER_ACCESS_TOKEN }}" >> $GITHUB_ENV
+            echo "TRADIER_ACCOUNT_ID=${{ secrets.TRADIER_ACCOUNT_ID }}" >> $GITHUB_ENV
+            echo "TRADIER_ENV=${{ vars.TRADIER_ENV || 'live' }}" >> $GITHUB_ENV
 
+      - name: Validate Tradier credentials
+        run: |
+            python - <<'PY'
+            import os, requests
+            base = "https://api.tradier.com" if os.environ.get("TRADIER_ENV","live")=="live" else "https://sandbox.tradier.com"
+            r = requests.get(base + "/v1/user/profile",
+                            headers={"Authorization":"Bearer " + os.environ["TRADIER_ACCESS_TOKEN"],
+                                    "Accept":"application/json"}, timeout=20)
+            print("Env:", os.environ.get("TRADIER_ENV"), "Status:", r.status_code)
+            print("Body:", r.text[:500])
+            r.raise_for_status()
+            PY
+            
       - name: Run bot
         if: steps.market_open.outputs.open == 'true' || github.event_name == 'workflow_dispatch'
         env:
-          TICKERS: ${{ github.event.inputs.tickers }}
-          WATCHLIST: ${{ github.event.inputs.watchlist }}
-          RISK: ${{ github.event.inputs.risk || 'conservative' }}
-          SANDBOX: ${{ github.event.inputs.sandbox || 'false' }}
-          LIVE: ${{ github.event.inputs.live || 'false' }}
+            TICKERS:   ${{ github.event.inputs.tickers || vars.BOT_TICKERS }}
+            WATCHLIST: ${{ github.event.inputs.watchlist || vars.BOT_WATCHLIST }}
+            RISK:      ${{ github.event.inputs.risk || vars.BOT_RISK || 'conservative' }}
+            SANDBOX:   ${{ github.event.inputs.sandbox || (vars.TRADIER_ENV == 'sandbox' && 'true' || 'false') }}
+            LIVE:      ${{ github.event.inputs.live || vars.BOT_LIVE || 'false' }}
         run: |
-          ARGS=""
-          if [ -n "$TICKERS" ]; then ARGS="$ARGS --tickers \"$TICKERS\""; fi
-          if [ -n "$WATCHLIST" ]; then ARGS="$ARGS --watchlist \"$WATCHLIST\""; fi
-          ARGS="$ARGS --risk $RISK"
-          if [ "$SANDBOX" = "true" ]; then ARGS="$ARGS --sandbox"; fi
-          if [ "$LIVE" = "true" ]; then ARGS="$ARGS --live"; fi
-          echo "Running: python options_bot.py $ARGS"
-          python options_bot.py $ARGS | tee run.log
+            ARGS=""
+            if [ -n "$TICKERS" ]; then ARGS="$ARGS --tickers \"$TICKERS\""; fi
+            if [ -n "$WATCHLIST" ]; then ARGS="$ARGS --watchlist \"$WATCHLIST\""; fi
+            ARGS="$ARGS --risk $RISK"
+            if [ "$SANDBOX" = "true" ]; then ARGS="$ARGS --sandbox"; fi
+            if [ "$LIVE" = "true" ]; then ARGS="$ARGS --live"; fi
+            echo "Running: python options_bot.py $ARGS"
+            python options_bot.py $ARGS | tee run.log
+
 
       - name: Upload logs
         if: always()
