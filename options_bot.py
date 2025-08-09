@@ -61,75 +61,81 @@ MAX_CHAIN_SLEEP = 0.15
 RISK_PROFILES = {
     "extreme": {
         "CASH_BUFFER": 0.99,
-        "MIN_DTE": 7,
-        "MAX_DTE": 45,
-        "TARGET_DTE": 21,
-        "MIN_OI": 10,
-        "MIN_BID": 0.03,
-        "MAX_SPREAD_BPS": 300,
+        "MIN_DTE": 7, "MAX_DTE": 45, "TARGET_DTE": 21,
+        "MIN_OI": 10, "MIN_BID": 0.03, "MAX_SPREAD_BPS": 300,
         "VOL_PENALTY_SCALE": 0.6,
-        "DELTA_TARGET_PUT": -0.40,
-        "DELTA_TARGET_CCALL": 0.40,
-        "EARNINGS_PENALTY": 1.00,   # no penalty
-        "EXCLUDE_EARNINGS": False,
+        "DELTA_TARGET_PUT": -0.40, "DELTA_TARGET_CCALL": 0.40,
+        "MAX_DELTA_PUT": 0.50,          # NEW: hard cap on |delta|
+        "MIN_OTM_PCT_PUT": 0.00,        # NEW: min % OTM (0.00 = allow ATM)
+        "MIN_CREDIT": 0.10,             # NEW: skip dust
+        "TAKE_PROFIT": 0.50,            # NEW: 50% profit ⇒ close
+        "STOP_LOSS_MULT": 3.0,          # NEW: option mark ≥ 3.0× entry credit ⇒ close
+        "ROLL_AT_DTE": 5,               # NEW: start considering rolls near expiry
+        "ROLL_TARGET_DTE": 21,          # NEW: aim target DTE on roll
+        "EARNINGS_PENALTY": 1.00, "EXCLUDE_EARNINGS": False,
     },
     "high": {
         "CASH_BUFFER": 0.95,
-        "MIN_DTE": 10,
-        "MAX_DTE": 50,
-        "TARGET_DTE": 25,
-        "MIN_OI": 25,
-        "MIN_BID": 0.05,
-        "MAX_SPREAD_BPS": 200,
+        "MIN_DTE": 10, "MAX_DTE": 50, "TARGET_DTE": 25,
+        "MIN_OI": 25, "MIN_BID": 0.05, "MAX_SPREAD_BPS": 200,
         "VOL_PENALTY_SCALE": 0.8,
-        "DELTA_TARGET_PUT": -0.30,
-        "DELTA_TARGET_CCALL": 0.30,
-        "EARNINGS_PENALTY": 0.85,
-        "EXCLUDE_EARNINGS": False,
+        "DELTA_TARGET_PUT": -0.30, "DELTA_TARGET_CCALL": 0.30,
+        "MAX_DELTA_PUT": 0.40,
+        "MIN_OTM_PCT_PUT": 0.02,        # 2% OTM
+        "MIN_CREDIT": 0.15,
+        "TAKE_PROFIT": 0.60,
+        "STOP_LOSS_MULT": 2.5,
+        "ROLL_AT_DTE": 7,
+        "ROLL_TARGET_DTE": 28,
+        "EARNINGS_PENALTY": 0.85, "EXCLUDE_EARNINGS": False,
     },
     "moderate": {
         "CASH_BUFFER": 0.90,
-        "MIN_DTE": 14,
-        "MAX_DTE": 60,
-        "TARGET_DTE": 30,
-        "MIN_OI": 50,
-        "MIN_BID": 0.05,
-        "MAX_SPREAD_BPS": 100,
+        "MIN_DTE": 14, "MAX_DTE": 60, "TARGET_DTE": 30,
+        "MIN_OI": 50, "MIN_BID": 0.05, "MAX_SPREAD_BPS": 100,
         "VOL_PENALTY_SCALE": 1.0,
-        "DELTA_TARGET_PUT": -0.25,
-        "DELTA_TARGET_CCALL": 0.25,
-        "EARNINGS_PENALTY": 0.70,
-        "EXCLUDE_EARNINGS": False,
+        "DELTA_TARGET_PUT": -0.25, "DELTA_TARGET_CCALL": 0.25,
+        "MAX_DELTA_PUT": 0.35,
+        "MIN_OTM_PCT_PUT": 0.05,        # 5% OTM
+        "MIN_CREDIT": 0.20,
+        "TAKE_PROFIT": 0.65,
+        "STOP_LOSS_MULT": 2.0,
+        "ROLL_AT_DTE": 8,
+        "ROLL_TARGET_DTE": 30,
+        "EARNINGS_PENALTY": 0.70, "EXCLUDE_EARNINGS": False,
     },
     "low": {
         "CASH_BUFFER": 0.88,
-        "MIN_DTE": 21,
-        "MAX_DTE": 75,
-        "TARGET_DTE": 35,
-        "MIN_OI": 100,
-        "MIN_BID": 0.10,
-        "MAX_SPREAD_BPS": 80,
+        "MIN_DTE": 21, "MAX_DTE": 75, "TARGET_DTE": 35,
+        "MIN_OI": 100, "MIN_BID": 0.10, "MAX_SPREAD_BPS": 80,
         "VOL_PENALTY_SCALE": 1.2,
-        "DELTA_TARGET_PUT": -0.20,
-        "DELTA_TARGET_CCALL": 0.20,
-        "EARNINGS_PENALTY": 0.60,
-        "EXCLUDE_EARNINGS": False,
+        "DELTA_TARGET_PUT": -0.20, "DELTA_TARGET_CCALL": 0.20,
+        "MAX_DELTA_PUT": 0.30,
+        "MIN_OTM_PCT_PUT": 0.07,        # 7% OTM
+        "MIN_CREDIT": 0.25,
+        "TAKE_PROFIT": 0.70,
+        "STOP_LOSS_MULT": 1.7,
+        "ROLL_AT_DTE": 9,
+        "ROLL_TARGET_DTE": 35,
+        "EARNINGS_PENALTY": 0.60, "EXCLUDE_EARNINGS": False,
     },
     "conservative": {
         "CASH_BUFFER": 0.85,
-        "MIN_DTE": 25,
-        "MAX_DTE": 90,
-        "TARGET_DTE": 45,
-        "MIN_OI": 150,
-        "MIN_BID": 0.10,
-        "MAX_SPREAD_BPS": 60,
+        "MIN_DTE": 25, "MAX_DTE": 90, "TARGET_DTE": 45,
+        "MIN_OI": 150, "MIN_BID": 0.10, "MAX_SPREAD_BPS": 60,
         "VOL_PENALTY_SCALE": 1.4,
-        "DELTA_TARGET_PUT": -0.15,
-        "DELTA_TARGET_CCALL": 0.15,
-        "EARNINGS_PENALTY": 0.50,
-        "EXCLUDE_EARNINGS": True,   # drop anything that crosses earnings
+        "DELTA_TARGET_PUT": -0.15, "DELTA_TARGET_CCALL": 0.15,
+        "MAX_DELTA_PUT": 0.25,
+        "MIN_OTM_PCT_PUT": 0.10,        # 10% OTM
+        "MIN_CREDIT": 0.30,
+        "TAKE_PROFIT": 0.70,
+        "STOP_LOSS_MULT": 1.5,
+        "ROLL_AT_DTE": 10,
+        "ROLL_TARGET_DTE": 45,
+        "EARNINGS_PENALTY": 0.50, "EXCLUDE_EARNINGS": True,
     },
 }
+
 
 # ----------------------------- Utils -----------------------------
 def td_now():
@@ -221,6 +227,9 @@ def print_balance_snapshot(balances: dict):
 
 def floor_to_tick(p: float, tick: float) -> float:
     return round(math.floor(p / tick) * tick, 2)
+
+def ceil_to_tick(p: float, tick: float) -> float:
+    return round(math.ceil(p / tick) * tick, 2)
 
 def guess_tick(bid: Optional[float], ask: Optional[float], last: Optional[float], mid: Optional[float]) -> float:
     """
@@ -369,6 +378,19 @@ class Tradier:
             # leave out as None for all
         return out
 
+    def get_option_quotes(self, option_symbols: List[str], want_greeks: bool = False) -> List[dict]:
+        if not option_symbols:
+            return []
+        data = self._get("/v1/markets/options/quotes", params={
+            "symbols": ",".join(option_symbols),
+            "greeks": str(want_greeks).lower()
+        })
+        return ensure_list(safe_get(data, "quotes", "quote", default=[]))
+
+    def get_account_history(self, account_id: Optional[str] = None) -> List[dict]:
+        aid = account_id or self.get_account_id()
+        data = self._get(f"/v1/accounts/{aid}/history")
+        return ensure_list(safe_get(data, "history", "event", default=[]))
 
     # --- trading ---
     def preview_or_place_option_order(self, option_symbol: str, underlying: str, side: str,
@@ -426,6 +448,29 @@ def score_short_put(opt: dict, rv: Optional[float], earnings_by_exp: bool, cfg: 
     if oi < cfg["MIN_OI"]:
         return None
     if cfg["EXCLUDE_EARNINGS"] and earnings_by_exp:
+        return None
+    # Skip if ITM or not sufficiently OTM
+    px_now = float(opt.get("underlying_price") or 0.0)  # chains often include this
+    if not px_now:
+        px_now = float(opt.get("last_price") or 0.0)
+    strike = float(opt["strike"])
+
+    # 1) Never sell ITM puts
+    if strike >= px_now:
+        return None
+
+    # 2) Enforce min % OTM (e.g., 5–10% for conservative)
+    min_otm_pct = CFG.get("MIN_OTM_PCT_PUT", 0.0)
+    if strike > px_now * (1 - min_otm_pct):
+        return None
+
+    # 3) Delta cap (assignment risk)
+    if (greeks.get("delta") is not None) and (abs(greeks["delta"]) > CFG.get("MAX_DELTA_PUT", 1.0)):
+        return None
+
+    # 4) Minimum credit
+    m = mid_price(bid, ask, last)
+    if not m or bid < cfg["MIN_BID"] or m < cfg.get("MIN_CREDIT", 0.10):
         return None
 
     collateral = strike * 100.0
@@ -568,6 +613,145 @@ def apply_risk_profile(name: str) -> dict:
     cfg.update(prof)
     return cfg
 
+def estimate_entry_credit_per_share(pos: dict, history_events: List[dict]) -> Optional[float]:
+    """
+    Try to infer the original credit (per share) for a short option.
+    Priority: position.cost_basis -> most recent 'trade' event price -> None
+    """
+    try:
+        qty = abs(int(pos.get("quantity") or 0))
+        if qty <= 0:
+            return None
+        cb = pos.get("cost_basis")
+        if cb is not None:
+            # cost_basis is total dollars; per-share credit:
+            return abs(float(cb)) / (qty * 100.0)
+    except Exception:
+        pass
+
+    # Fall back: look up last trade in account history for this option_symbol
+    try:
+        occ = pos.get("instrument", {}).get("option_symbol") or pos.get("instrument", {}).get("symbol")
+        if not occ:
+            return None
+        events = [e for e in history_events if (e.get("type") == "trade" and (e.get("option_symbol") == occ or e.get("symbol") == occ))]
+        events = sorted(events, key=lambda e: e.get("date", ""), reverse=True)
+        for e in events:
+            px = e.get("price")
+            if px is not None:
+                return abs(float(px))
+    except Exception:
+        pass
+    return None
+
+def manage_open_positions(t: Tradier, cfg: dict, account_id: str, auto_close: bool = True, auto_roll: bool = False):
+    """
+    Checks open short options for exits or rolls.
+    - Close at TAKE_PROFIT (profit %) or STOP_LOSS_MULT
+    - Consider roll when DTE <= ROLL_AT_DTE (close-for-profit preferred)
+    By default, only closes are placed; rolling is suggested unless auto_roll=True.
+    """
+    positions = t.get_positions(account_id)
+    short_opts = [p for p in ensure_list(positions)
+                  if p.get("instrument", {}).get("type") == "option" and int(p.get("quantity") or 0) < 0]
+
+    if not short_opts:
+        print("Open short options: 0")
+        return
+
+    # Fetch current quotes in bulk
+    occs = []
+    meta_by_occ = {}
+    for p in short_opts:
+        occ = p.get("instrument", {}).get("option_symbol") or p.get("instrument", {}).get("symbol")
+        if occ:
+            occs.append(occ)
+            meta_by_occ[occ] = p
+    quotes = t.get_option_quotes(occs, want_greeks=True)
+    quotes_by_occ = {q.get("symbol"): q for q in quotes}
+
+    # For entry credit estimation
+    hist = t.get_account_history(account_id)
+
+    actions = []
+
+    for occ, pos in meta_by_occ.items():
+        q = quotes_by_occ.get(occ) or {}
+        bid = float(q.get("bid") or 0.0); ask = float(q.get("ask") or 0.0); last = q.get("last")
+        mid = mid_price(bid, ask, last)
+        if not mid:
+            continue
+
+        meta = parse_occ_option(occ)
+        exp_yymmdd = meta.get("date")
+        exp = None
+        try:
+            exp = datetime.strptime(exp_yymmdd, "%y%m%d").date()
+        except Exception:
+            pass
+        dte = (exp - td_now().date()).days if exp else 999
+
+        entry_per_share = estimate_entry_credit_per_share(pos, hist)
+        if entry_per_share is None or entry_per_share <= 0:
+            # can't compute P&L; skip
+            continue
+
+        # Profit % for a short: (entry - current) / entry
+        profit = (entry_per_share - mid) / entry_per_share
+
+        qty = abs(int(pos.get("quantity") or 0))
+        underlying = meta.get("underlying")
+
+        tick = guess_tick(bid, ask, last, mid)
+        btc_limit = ceil_to_tick(mid, tick)  # buy-to-close at/above mid to get filled
+
+        # Exit rules
+        if profit >= cfg.get("TAKE_PROFIT", 0.65):
+            actions.append(("close", occ, underlying, qty, btc_limit, f"take-profit {profit:.0%}"))
+            continue
+
+        if mid >= entry_per_share * cfg.get("STOP_LOSS_MULT", 2.0):
+            actions.append(("close", occ, underlying, qty, btc_limit, f"stop-loss (mark {mid:.2f} ≥ {cfg['STOP_LOSS_MULT']}× entry {entry_per_share:.2f})"))
+            continue
+
+        # Roll consideration (simple): near expiry and still open
+        if dte <= cfg.get("ROLL_AT_DTE", 7):
+            actions.append(("roll", occ, underlying, qty, btc_limit, f"roll candidate (DTE {dte})"))
+            continue
+
+    # Execute closes first (free up collateral)
+    for typ, occ, und, qty, limit_px, note in actions:
+        if typ != "close":
+            continue
+        print(f"Auto-close {occ} x{qty} @ {limit_px} — {note}")
+        try:
+            res = t.preview_or_place_option_order(
+                option_symbol=occ,
+                underlying=und,
+                side="buy_to_close",
+                quantity=qty,
+                limit_price=limit_px,
+                duration="day",
+                live=True if auto_close else False,
+                tag="options-bot-close"
+            )
+            if res.get("preview"):
+                print("Close preview:", json.dumps(res["preview"], indent=2))
+            if res.get("placed"):
+                print("Close placed:", json.dumps(res["placed"], indent=2))
+        except Exception as e:
+            print(f"Close failed for {occ}: {e}")
+
+    # Rolls: just print suggestions unless auto_roll=True
+    for typ, occ, und, qty, limit_px, note in actions:
+        if typ != "roll":
+            continue
+        print(f"Roll suggestion for {occ} x{qty} — {note}")
+        if not auto_roll:
+            continue
+        # (Optional) Implement legged roll: 1) buy_to_close current (at limit_px), 2) find new contract and sell_to_open
+        # For safety, leaving as suggestion by default.
+
 def main():
     load_dotenv()  # .env
     ap = argparse.ArgumentParser(description="Scan & trade single-leg options via Tradier")
@@ -624,6 +808,8 @@ def main():
 
     cash_to_use = deployable_cash * cfg["CASH_BUFFER"]
     print(f"Cash to use (after buffer {cfg['CASH_BUFFER']:.0%}): ${cash_to_use:,.2f}")
+
+    manage_open_positions(t, cfg, acct_id, auto_close=True, auto_roll=False)
 
     # Positions for covered calls
     shares_by_symbol = {}
